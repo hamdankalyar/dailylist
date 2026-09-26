@@ -1,25 +1,24 @@
 # DailyList
 
-## 07. Reusable components, typed props, and StyleSheet utilities
+## 08. Conditional styling for a component
 
-- **Article:** [Reusable components, typed props, and StyleSheet utilities](https://aitechforyou.com/articles/react-native-reusable-components-props).
+- **Article:** [Conditional styling for a component](https://aitechforyou.com/articles/react-native-conditional-styling).
 - **Snapshot:** This branch contains the app after this article.
 - **Progression:** Each article starts from the previous branch.
 - **Name:** DailyList replaces the Taskly name used in the article.
 
 ## Changes in this article
 
-- **ShoppingListItem:** Move the item into a named component.
-- **Props:** Require the name string.
-- **Items:** Render Coffee, Tea, and Sugar.
-- **StyleSheet.absoluteFill:** Put the pink View behind the items.
+- **isCompleted:** Add the optional Boolean prop with a false default.
+- **Tea:** Pass the completed prop using Boolean shorthand.
+- **Style arrays:** Gray the completed item and cross out its text.
 
 ## Run this snapshot
 
 - **Branch:** Switch to this article’s snapshot.
 
 ```sh
-git switch 07-react-native-reusable-components-props
+git switch 08-react-native-conditional-styling
 ```
 
 - **Dependencies:** Install the versions recorded in this branch.
