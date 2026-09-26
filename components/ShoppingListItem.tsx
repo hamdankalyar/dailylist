@@ -1,4 +1,5 @@
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { LibraryIcon } from "./LibraryIcon";
 import { theme } from "../theme";
 
 type Props = {
@@ -40,6 +41,7 @@ export function ShoppingListItem({ name, isCompleted = false }: Props) {
       >
         {name}
       </Text>
+      {isCompleted && <LibraryIcon />}
       <TouchableOpacity
         activeOpacity={0.8}
         style={styles.button}

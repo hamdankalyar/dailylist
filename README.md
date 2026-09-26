@@ -1,24 +1,24 @@
 # DailyList
 
-## 08. Conditional styling for a component
+## 09. Icons in React Native
 
-- **Article:** [Conditional styling for a component](https://aitechforyou.com/articles/react-native-conditional-styling).
+- **Article:** [Icons in React Native](https://aitechforyou.com/articles/react-native-icons).
 - **Snapshot:** This branch contains the app after this article.
 - **Progression:** Each article starts from the previous branch.
 - **Name:** DailyList replaces the Taskly name used in the article.
 
 ## Changes in this article
 
-- **isCompleted:** Add the optional Boolean prop with a false default.
-- **Tea:** Pass the completed prop using Boolean shorthand.
-- **Style arrays:** Gray the completed item and cross out its text.
+- **Ionicons:** Add the green checkmark-circle icon from @expo/vector-icons.
+- **Completed item:** Show the icon for Tea.
+- **Icon choice:** Use the vector icon example.
 
 ## Run this snapshot
 
 - **Branch:** Switch to this article’s snapshot.
 
 ```sh
-git switch 08-react-native-conditional-styling
+git switch 09-react-native-icons
 ```
 
 - **Dependencies:** Install the versions recorded in this branch.
