@@ -1,26 +1,25 @@
 # DailyList
 
-## 06. Pressable, TouchableOpacity, and Alert
+## 07. Reusable components, typed props, and StyleSheet utilities
 
-- **Article:** [Pressable, TouchableOpacity, and Alert](https://aitechforyou.com/articles/react-native-pressable-touchable-alert).
+- **Article:** [Reusable components, typed props, and StyleSheet utilities](https://aitechforyou.com/articles/react-native-reusable-components-props).
 - **Snapshot:** This branch contains the app after this article.
 - **Progression:** Each article starts from the previous branch.
 - **Name:** DailyList replaces the Taskly name used in the article.
 
 ## Changes in this article
 
-- **TouchableOpacity:** Add the styled Delete button with activeOpacity={0.8}.
-- **Row layout:** Place the item and button next to each other.
-- **Alert:** Show Yes and Cancel actions.
-- **Yes:** Log the message taught in the article.
-- **Item data:** No deletion state is introduced in this article.
+- **ShoppingListItem:** Move the item into a named component.
+- **Props:** Require the name string.
+- **Items:** Render Coffee, Tea, and Sugar.
+- **StyleSheet.absoluteFill:** Put the pink View behind the items.
 
 ## Run this snapshot
 
 - **Branch:** Switch to this article’s snapshot.
 
 ```sh
-git switch 06-react-native-pressable-touchable-alert
+git switch 07-react-native-reusable-components-props
 ```
 
 - **Dependencies:** Install the versions recorded in this branch.
