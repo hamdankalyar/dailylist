@@ -1,26 +1,25 @@
 # DailyList
 
-## 10. Navigation with Expo Router
+## 11. Stack navigation, links, and router methods
 
-- **Article:** [Navigation with Expo Router](https://aitechforyou.com/articles/react-native-expo-router).
+- **Article:** [Stack navigation, links, and router methods](https://aitechforyou.com/articles/react-native-screen-navigation).
 - **Snapshot:** This branch contains the app after this article.
 - **Progression:** Each article starts from the previous branch.
 - **Name:** DailyList replaces the Taskly name used in the article.
 
 ## Changes in this article
 
-- **Expo Router:** Change main to expo-router/entry.
-- **Screen:** Move App.tsx to app/index.tsx.
-- **Layout:** Add app/_layout.tsx with a Stack.
-- **Header:** Set the index screen title to Shopping list.
-- **Scheme:** Use dailylist for the renamed app.
+- **Screens:** Add counter.tsx and idea.tsx as View and Text placeholders.
+- **Link:** Open the counter screen.
+- **useRouter:** Open the idea screen with navigate.
+- **Header buttons:** Use the default stack back navigation.
 
 ## Run this snapshot
 
 - **Branch:** Switch to this article’s snapshot.
 
 ```sh
-git switch 10-react-native-expo-router
+git switch 11-react-native-screen-navigation
 ```
 
 - **Dependencies:** Install the versions recorded in this branch.
