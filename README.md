@@ -1,24 +1,26 @@
 # DailyList
 
-## 09. Icons in React Native
+## 10. Navigation with Expo Router
 
-- **Article:** [Icons in React Native](https://aitechforyou.com/articles/react-native-icons).
+- **Article:** [Navigation with Expo Router](https://aitechforyou.com/articles/react-native-expo-router).
 - **Snapshot:** This branch contains the app after this article.
 - **Progression:** Each article starts from the previous branch.
 - **Name:** DailyList replaces the Taskly name used in the article.
 
 ## Changes in this article
 
-- **Ionicons:** Add the green checkmark-circle icon from @expo/vector-icons.
-- **Completed item:** Show the icon for Tea.
-- **Icon choice:** Use the vector icon example.
+- **Expo Router:** Change main to expo-router/entry.
+- **Screen:** Move App.tsx to app/index.tsx.
+- **Layout:** Add app/_layout.tsx with a Stack.
+- **Header:** Set the index screen title to Shopping list.
+- **Scheme:** Use dailylist for the renamed app.
 
 ## Run this snapshot
 
 - **Branch:** Switch to this article’s snapshot.
 
 ```sh
-git switch 09-react-native-icons
+git switch 10-react-native-expo-router
 ```
 
 - **Dependencies:** Install the versions recorded in this branch.
