@@ -1,24 +1,26 @@
 # DailyList
 
-## 05. View, Text, and built-in styles
+## 06. Pressable, TouchableOpacity, and Alert
 
-- **Article:** [View, Text, and built-in styles](https://aitechforyou.com/articles/react-native-view-text-styling).
+- **Article:** [Pressable, TouchableOpacity, and Alert](https://aitechforyou.com/articles/react-native-pressable-touchable-alert).
 - **Snapshot:** This branch contains the app after this article.
 - **Progression:** Each article starts from the previous branch.
 - **Name:** DailyList replaces the Taskly name used in the article.
 
 ## Changes in this article
 
-- **View and Text:** Render the Coffee item.
-- **StyleSheet.create:** Organize the item styles.
-- **Theme:** Share the cerulean and white colors in theme.ts.
+- **TouchableOpacity:** Add the styled Delete button with activeOpacity={0.8}.
+- **Row layout:** Place the item and button next to each other.
+- **Alert:** Show Yes and Cancel actions.
+- **Yes:** Log the message taught in the article.
+- **Item data:** No deletion state is introduced in this article.
 
 ## Run this snapshot
 
 - **Branch:** Switch to this article’s snapshot.
 
 ```sh
-git switch 05-react-native-view-text-styling
+git switch 06-react-native-pressable-touchable-alert
 ```
 
 - **Dependencies:** Install the versions recorded in this branch.
