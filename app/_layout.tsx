@@ -1,21 +1,37 @@
-import { Stack } from "expo-router";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { Tabs } from "expo-router";
+import { theme } from "../theme";
 
 export default function Layout() {
   return (
-    <Stack>
-      <Stack.Screen name="index" options={{ title: "Shopping list" }} />
-      <Stack.Screen
+    <Tabs screenOptions={{ tabBarActiveTintColor: theme.color.cerulean }}>
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: "Shopping list",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="list" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="counter"
         options={{
           title: "Counter",
-          presentation: "modal",
-          animation: "slide_from_bottom",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="time" color={color} size={size} />
+          ),
         }}
       />
-      <Stack.Screen
+      <Tabs.Screen
         name="idea"
-        options={{ title: "Idea", presentation: "modal" }}
+        options={{
+          title: "Idea",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="bulb" color={color} size={size} />
+          ),
+        }}
       />
-    </Stack>
+    </Tabs>
   );
 }
