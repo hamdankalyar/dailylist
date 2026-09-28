@@ -18,6 +18,7 @@ export default function Layout() {
         name="counter"
         options={{
           title: "Counter",
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="time" color={color} size={size} />
           ),
