@@ -38,4 +38,58 @@ for (const value of ["", "Milk"]) {
   }
 }
 
-console.log("TextInput submission checks pass.");
+const { transpileModule, ModuleKind, JsxEmit } = require("typescript");
+const element = (type, props) => ({ type, props });
+const modules = {
+  "react/jsx-runtime": { jsx: element, jsxs: element },
+  react: { useState: (initial) => [initial, () => {}] },
+  "react-native": {
+    FlatList: "FlatList",
+    TextInput: "TextInput",
+    Text: "Text",
+    View: "View",
+    StyleSheet: { create: (styles) => styles, absoluteFill: {} },
+  },
+  "expo-status-bar": { StatusBar: "StatusBar" },
+  "../components/ShoppingListItem": { ShoppingListItem: "ShoppingListItem" },
+  "../theme": { theme: { color: { white: "#ffffff", lightGray: "#eee" } } },
+};
+const screen = { exports: {}, require: (name) => modules[name] };
+runInNewContext(
+  transpileModule(source, {
+    compilerOptions: { module: ModuleKind.CommonJS, jsx: JsxEmit.ReactJSX },
+  }).outputText,
+  screen,
+);
+const list = screen.exports
+  .default()
+  .props.children.find((child) => child.type === "FlatList");
+assert.ok(list, "the screen renders FlatList");
+assert.equal(list.props.data.length, 0, "the list starts empty");
+assert.equal(list.props.stickyHeaderIndices.join(","), "0");
+assert.equal(list.props.contentContainerStyle.paddingTop, 12);
+assert.equal(
+  list.props.ListHeaderComponent.type,
+  "TextInput",
+  "the header is an element rather than an inline component function",
+);
+assert.equal(
+  list.props.ListHeaderComponent.props.style.backgroundColor,
+  "#ffffff",
+);
+assert.equal(
+  list.props.ListHeaderComponent.props.accessibilityLabel,
+  "New shopping list item",
+);
+assert.equal(
+  list.props.ListEmptyComponent.props.children.props.children,
+  "Your shopping list is empty",
+);
+const row = list.props.renderItem({
+  item: { id: "1", name: "Tea", isCompleted: true },
+});
+assert.equal(row.type, "ShoppingListItem");
+assert.equal(row.props.name, "Tea");
+assert.equal(row.props.isCompleted, true, "completed styling is preserved");
+
+console.log("TextInput submission and FlatList checks pass.");

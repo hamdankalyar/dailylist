@@ -1,6 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
-import { StyleSheet, TextInput, View } from "react-native";
+import { FlatList, StyleSheet, Text, TextInput, View } from "react-native";
 import { ShoppingListItem } from "../components/ShoppingListItem";
 import { theme } from "../theme";
 
@@ -10,16 +10,9 @@ type ShoppingListItemType = {
   isCompleted?: boolean;
 };
 
-const initialList: ShoppingListItemType[] = [
-  { id: "1", name: "Coffee" },
-  { id: "2", name: "Tea", isCompleted: true },
-  { id: "3", name: "Sugar" },
-];
-
 export default function App() {
   const [value, setValue] = useState("");
-  const [shoppingList, setShoppingList] =
-    useState<ShoppingListItemType[]>(initialList);
+  const [shoppingList, setShoppingList] = useState<ShoppingListItemType[]>([]);
 
   const handleSubmit = () => {
     if (value) {
@@ -37,22 +30,30 @@ export default function App() {
   return (
     <View style={styles.container}>
       <View style={[StyleSheet.absoluteFill, { backgroundColor: "pink" }]} />
-      <TextInput
-        style={styles.textInput}
-        accessibilityLabel="New shopping list item"
-        placeholder="e.g Coffee"
-        value={value}
-        onChangeText={setValue}
-        returnKeyType="done"
-        onSubmitEditing={handleSubmit}
+      <FlatList
+        data={shoppingList}
+        contentContainerStyle={styles.contentContainer}
+        stickyHeaderIndices={[0]}
+        renderItem={({ item }) => (
+          <ShoppingListItem name={item.name} isCompleted={item.isCompleted} />
+        )}
+        ListHeaderComponent={
+          <TextInput
+            style={styles.textInput}
+            accessibilityLabel="New shopping list item"
+            placeholder="e.g Coffee"
+            value={value}
+            onChangeText={setValue}
+            returnKeyType="done"
+            onSubmitEditing={handleSubmit}
+          />
+        }
+        ListEmptyComponent={
+          <View style={styles.listEmptyContainer}>
+            <Text>Your shopping list is empty</Text>
+          </View>
+        }
       />
-      {shoppingList.map((item) => (
-        <ShoppingListItem
-          key={item.id}
-          name={item.name}
-          isCompleted={item.isCompleted}
-        />
-      ))}
       <StatusBar style="auto" />
     </View>
   );
@@ -62,9 +63,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.color.white,
+  },
+  contentContainer: {
     paddingTop: 12,
   },
   textInput: {
+    backgroundColor: theme.color.white,
     borderColor: theme.color.lightGray,
     borderWidth: 2,
     padding: 12,
@@ -72,5 +76,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     fontSize: 18,
     borderRadius: 50,
+  },
+  listEmptyContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    marginVertical: 18,
   },
 });
