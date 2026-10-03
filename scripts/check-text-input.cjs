@@ -21,18 +21,31 @@ for (const value of ["", "Milk"]) {
   let updated;
   let cleared;
   let saved;
+  const updates = [];
 
   runInNewContext(`${handler}\nhandleSubmit();`, {
     value,
     shoppingList,
     isLoading: false,
     storageKey: "shopping-list",
+    LayoutAnimation: {
+      Presets: { easeInEaseOut: "easeInEaseOut" },
+      configureNext: (preset) => updates.push(preset),
+    },
     saveToStorage: (key, list) => (saved = { key, list }),
-    setShoppingList: (list) => (updated = list),
+    setShoppingList: (list) => {
+      updates.push("state");
+      updated = list;
+    },
     setValue: (text) => (cleared = text),
   });
 
   assert.deepEqual(shoppingList, original, "existing items are preserved");
+  assert.deepEqual(
+    updates,
+    value ? ["easeInEaseOut", "state"] : [],
+    "animation is configured before a successful list update",
+  );
   assert.equal(cleared, value ? "" : undefined);
   if (value) {
     assert.equal(updated[0].name, value);
@@ -108,4 +121,42 @@ assert.equal(row.type, "ShoppingListItem");
 assert.equal(row.props.name, "Tea");
 assert.equal(row.props.isCompleted, true, "completed styling is preserved");
 
-console.log("TextInput submission, saving, and FlatList checks pass.");
+async function checkInitialLoading() {
+  const initialLoading = source.match(
+    /const fetchInitial = async \(\) => \{[\s\S]*?\n    \};/,
+  )?.[0];
+  assert.ok(initialLoading, "the screen defines its initial loading function");
+
+  for (const data of [[{ id: "saved", name: "Milk" }], null]) {
+    const updates = [];
+    await runInNewContext(`${initialLoading}\nfetchInitial();`, {
+      storageKey: "shopping-list",
+      getFromStorage: async () => data,
+      LayoutAnimation: {
+        Presets: { easeInEaseOut: "easeInEaseOut" },
+        configureNext: (preset) => updates.push(preset),
+      },
+      setShoppingList: (list) => {
+        assert.equal(list, data, "the saved list is restored");
+        updates.push("state");
+      },
+      setIsLoading: (loading) => updates.push(loading),
+    });
+    assert.deepEqual(
+      updates,
+      data ? ["easeInEaseOut", "state", false] : [false],
+      "restored lists animate before updating state and finishing loading",
+    );
+  }
+}
+
+checkInitialLoading()
+  .then(() =>
+    console.log(
+      "TextInput submission, saving, FlatList, and layout animation checks pass.",
+    ),
+  )
+  .catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
