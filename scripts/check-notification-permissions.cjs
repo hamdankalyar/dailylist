@@ -82,6 +82,8 @@ async function check() {
 
   // Evaluate the installed package's real modules with Android Expo Go native stubs.
   const nativeCalls = [];
+  const scheduledNotifications = [];
+  let schedulingFailure;
   const nativeModule = {
     getRegistrationInfoAsync: async () => null,
     getPermissionsAsync: async () => {
@@ -93,12 +95,20 @@ async function check() {
       return { status: "granted" };
     },
     setNotificationChannelAsync: async () => nativeCalls.push("channel"),
+    scheduleNotificationAsync: async (identifier, content, trigger) => {
+      if (schedulingFailure) throw schedulingFailure;
+      scheduledNotifications.push(
+        JSON.parse(JSON.stringify({ identifier, content, trigger })),
+      );
+      return identifier;
+    },
   };
   const nativeMocks = {
     expo: { isRunningInExpoGo: () => true },
     "expo-modules-core": {
       Platform: { OS: "android" },
       requireNativeModule: () => nativeModule,
+      uuid: { v4: () => "test-notification-id" },
     },
     "expo-application": {},
     "expo-constants": {},
@@ -151,44 +161,97 @@ async function check() {
   assert.equal(await registerInExpoGo(), "granted");
   assert.deepEqual(nativeCalls, ["channel", "check", "request"]);
 
-  const logs = [];
+  const alerts = [];
   const errors = [];
+  const device = { isDevice: true };
   let requestCalls = 0;
   let failure;
+  let permissionResult = "granted";
   const element = (type, props) => ({ type, props });
   const screen = load(
     "../app/counter/index.tsx",
     {
       "react/jsx-runtime": { jsx: element, jsxs: element },
+      "expo-device": device,
+      "expo-notifications/build/Notifications.types": loadInstalled(
+        resolve(notificationsRoot, "build/Notifications.types.js"),
+      ),
+      "expo-notifications/build/scheduleNotificationAsync": loadInstalled(
+        resolve(notificationsRoot, "build/scheduleNotificationAsync.js"),
+      ),
       "react-native": {
         View: "View",
         Text: "Text",
         TouchableOpacity: "TouchableOpacity",
         StyleSheet: { create: (styles) => styles },
+        Alert: { alert: (...args) => alerts.push(args) },
       },
       "../../theme": { theme: { color: { black: "#000", white: "#fff" } } },
       "../../utils/registerForPushNotificationsAsync": {
         registerForPushNotificationsAsync: async () => {
           requestCalls++;
           if (failure) throw failure;
-          return "granted";
+          return permissionResult;
         },
       },
     },
-    { log: (value) => logs.push(value), error: (...args) => errors.push(args) },
+    { error: (...args) => errors.push(args) },
   ).default();
   assert.equal(requestCalls, 0, "rendering does not request permission");
+  assert.equal(scheduledNotifications.length, 0, "rendering does not schedule");
   const button = screen.props.children.find(
     (child) => child.type === "TouchableOpacity",
   );
-  assert.equal(button.props.children.props.children, "Request permission");
+  assert.equal(button.props.children.props.children, "Schedule notification");
   assert.equal(button.props.accessibilityRole, "button");
+  assert.equal(button.props.activeOpacity, 0.8);
   await button.props.onPress();
-  assert.deepEqual(logs, ["granted"], "a press logs the permission result");
+  assert.equal(requestCalls, 1, "a press checks permission before scheduling");
+  assert.deepEqual(scheduledNotifications, [
+    {
+      identifier: "test-notification-id",
+      content: { title: "I'm a notification from your app" },
+      trigger: {
+        type: "timeInterval",
+        repeats: false,
+        seconds: 5,
+        channelId: "default",
+      },
+    },
+  ]);
+  assert.equal(alerts.length, 0, "granted permission needs no settings alert");
+  permissionResult = "denied";
+  await button.props.onPress();
+  assert.deepEqual(alerts, [
+    [
+      "Unable to schedule notification",
+      "Enable the notification permission for Expo Go in settings.",
+    ],
+  ]);
+  device.isDevice = false;
+  permissionResult = null;
+  await button.props.onPress();
+  assert.equal(alerts.length, 1, "simulators do not show the settings alert");
+  assert.equal(
+    scheduledNotifications.length,
+    1,
+    "non-granted results do not schedule",
+  );
+
   failure = new Error("Native permission request failed");
   await button.props.onPress();
-  assert.equal(errors[0][1], failure, "the handler catches native errors");
-  console.log("Notification permission utility and button checks pass.");
+  assert.equal(errors[0][1], failure, "the handler catches permission errors");
+  failure = undefined;
+  permissionResult = "granted";
+  device.isDevice = true;
+  schedulingFailure = new Error("Native scheduling failed");
+  await button.props.onPress();
+  assert.equal(
+    errors[1][1],
+    schedulingFailure,
+    "the handler catches scheduling errors",
+  );
+  console.log("Notification permission and local scheduling checks pass.");
 }
 
 check().catch((error) => {

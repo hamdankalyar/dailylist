@@ -1,14 +1,32 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import * as Device from "expo-device";
+// Keep local notifications usable in Android Expo Go without remote push registration.
+import { SchedulableTriggerInputTypes } from "expo-notifications/build/Notifications.types";
+import { scheduleNotificationAsync } from "expo-notifications/build/scheduleNotificationAsync";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { theme } from "../../theme";
 import { registerForPushNotificationsAsync } from "../../utils/registerForPushNotificationsAsync";
 
 export default function CounterScreen() {
-  const handleRequestPermission = async () => {
+  const handleScheduleNotification = async () => {
     try {
       const result = await registerForPushNotificationsAsync();
-      console.log(result);
+      if (result === "granted") {
+        await scheduleNotificationAsync({
+          content: { title: "I'm a notification from your app" },
+          trigger: {
+            type: SchedulableTriggerInputTypes.TIME_INTERVAL,
+            seconds: 5,
+            channelId: "default",
+          },
+        });
+      } else if (Device.isDevice) {
+        Alert.alert(
+          "Unable to schedule notification",
+          "Enable the notification permission for Expo Go in settings.",
+        );
+      }
     } catch (error) {
-      console.error("Failed to request notification permission", error);
+      console.error("Failed to schedule notification", error);
     }
   };
 
@@ -17,11 +35,11 @@ export default function CounterScreen() {
       <Text>Counter</Text>
       <TouchableOpacity
         activeOpacity={0.8}
-        onPress={handleRequestPermission}
+        onPress={handleScheduleNotification}
         style={styles.button}
         accessibilityRole="button"
       >
-        <Text style={styles.buttonText}>Request permission</Text>
+        <Text style={styles.buttonText}>Schedule notification</Text>
       </TouchableOpacity>
     </View>
   );
