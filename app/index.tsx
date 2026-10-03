@@ -1,4 +1,5 @@
 import { StatusBar } from "expo-status-bar";
+import * as Haptics from "expo-haptics";
 import { useEffect, useState } from "react";
 import {
   FlatList,
@@ -53,6 +54,37 @@ export default function App() {
     }
   };
 
+  const handleDelete = (id: string) => {
+    const newShoppingList = shoppingList.filter((item) => item.id !== id);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(
+      console.error,
+    );
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setShoppingList(newShoppingList);
+    saveToStorage(storageKey, newShoppingList);
+  };
+
+  const handleToggleComplete = (id: string) => {
+    const newShoppingList = shoppingList.map((item) => {
+      if (item.id !== id) return item;
+
+      if (item.isCompleted) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(
+          console.error,
+        );
+      } else {
+        Haptics.notificationAsync(
+          Haptics.NotificationFeedbackType.Success,
+        ).catch(console.error);
+      }
+      return { ...item, isCompleted: !item.isCompleted };
+    });
+
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setShoppingList(newShoppingList);
+    saveToStorage(storageKey, newShoppingList);
+  };
+
   return (
     <View style={styles.container}>
       <View style={[StyleSheet.absoluteFill, { backgroundColor: "pink" }]} />
@@ -61,7 +93,12 @@ export default function App() {
         contentContainerStyle={styles.contentContainer}
         stickyHeaderIndices={[0]}
         renderItem={({ item }) => (
-          <ShoppingListItem name={item.name} isCompleted={item.isCompleted} />
+          <ShoppingListItem
+            name={item.name}
+            isCompleted={item.isCompleted}
+            onDelete={() => handleDelete(item.id)}
+            onToggleComplete={() => handleToggleComplete(item.id)}
+          />
         )}
         ListHeaderComponent={
           <TextInput

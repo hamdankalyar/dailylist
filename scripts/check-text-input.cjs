@@ -65,6 +65,7 @@ for (const value of ["", "Milk"]) {
 
 const { transpileModule, ModuleKind, JsxEmit } = require("typescript");
 const element = (type, props) => ({ type, props });
+const hapticCalls = [];
 const modules = {
   "react/jsx-runtime": { jsx: element, jsxs: element },
   react: {
@@ -79,6 +80,18 @@ const modules = {
     StyleSheet: { create: (styles) => styles, absoluteFill: {} },
   },
   "expo-status-bar": { StatusBar: "StatusBar" },
+  "expo-haptics": {
+    ImpactFeedbackStyle: { Medium: "medium" },
+    NotificationFeedbackType: { Success: "success" },
+    impactAsync: (style) => {
+      hapticCalls.push(["impact", style]);
+      return Promise.resolve();
+    },
+    notificationAsync: (type) => {
+      hapticCalls.push(["notification", type]);
+      return Promise.resolve();
+    },
+  },
   "../components/ShoppingListItem": { ShoppingListItem: "ShoppingListItem" },
   "../theme": { theme: { color: { white: "#ffffff", lightGray: "#eee" } } },
   "../utils/storage": {},
@@ -121,6 +134,109 @@ assert.equal(row.type, "ShoppingListItem");
 assert.equal(row.props.name, "Tea");
 assert.equal(row.props.isCompleted, true, "completed styling is preserved");
 
+for (const [action, isCompleted, expectedHaptic] of [
+  ["onDelete", false, ["impact", "medium"]],
+  ["onToggleComplete", false, ["notification", "success"]],
+  ["onToggleComplete", true, ["impact", "medium"]],
+]) {
+  const shoppingList = [
+    { id: "1", name: "Coffee", isCompleted },
+    { id: "2", name: "Tea", isCompleted: true },
+  ];
+  const original = structuredClone(shoppingList);
+  const updates = [];
+  let updated;
+  let saved;
+  let stateIndex = 0;
+  modules.react.useState = () => [
+    ["", shoppingList, false][stateIndex++],
+    (value) => {
+      updated = value;
+      updates.push("state");
+    },
+  ];
+  modules["react-native"].LayoutAnimation = {
+    Presets: { easeInEaseOut: "easeInEaseOut" },
+    configureNext: (preset) => updates.push(preset),
+  };
+  modules["../utils/storage"].saveToStorage = (key, list) => {
+    assert.equal(key, "shopping-list");
+    saved = list;
+  };
+  hapticCalls.length = 0;
+  const actionList = screen.exports
+    .default()
+    .props.children.find((child) => child.type === "FlatList");
+  actionList.props.renderItem({ item: shoppingList[0] }).props[action]();
+  assert.deepEqual(
+    hapticCalls,
+    [expectedHaptic],
+    `${action} triggers one preset`,
+  );
+  assert.deepEqual(updates, ["easeInEaseOut", "state"]);
+  assert.equal(saved, updated, "the changed list is persisted");
+  assert.deepEqual(
+    shoppingList,
+    original,
+    "actions preserve the original list",
+  );
+  assert.equal(updated.at(-1), shoppingList[1], "other items are unchanged");
+  if (action === "onDelete") {
+    assert.equal(
+      updated.length,
+      1,
+      "confirmed deletion removes the selected item",
+    );
+  } else {
+    assert.equal(updated[0].isCompleted, !isCompleted);
+  }
+}
+
+const itemSource = readFileSync(
+  join(__dirname, "../components/ShoppingListItem.tsx"),
+  "utf8",
+);
+let alertButtons;
+const itemModule = {
+  exports: {},
+  require: (name) =>
+    name === "./LibraryIcon" ? { LibraryIcon: "LibraryIcon" } : modules[name],
+};
+modules["react-native"].Alert = {
+  alert: (_title, _message, buttons) => (alertButtons = buttons),
+};
+modules["react-native"].TouchableOpacity = "TouchableOpacity";
+runInNewContext(
+  transpileModule(itemSource, {
+    compilerOptions: { module: ModuleKind.CommonJS, jsx: JsxEmit.ReactJSX },
+  }).outputText,
+  itemModule,
+);
+for (const isCompleted of [false, true]) {
+  let deleted = 0;
+  let toggled = 0;
+  const item = itemModule.exports.ShoppingListItem({
+    name: "Tea",
+    isCompleted,
+    onDelete: () => deleted++,
+    onToggleComplete: () => toggled++,
+  });
+  const [toggle, , deleteButton] = item.props.children;
+  assert.equal(toggle.props.accessibilityRole, "checkbox");
+  assert.equal(toggle.props.accessibilityState.checked, isCompleted);
+  toggle.props.onPress();
+  assert.equal(toggled, 1, "pressing the item invokes the completion callback");
+  deleteButton.props.onPress();
+  assert.equal(deleted, 0, "opening the alert does not delete the item");
+  assert.equal(
+    alertButtons.find((button) => button.style === "cancel").onPress,
+    undefined,
+  );
+  alertButtons.find((button) => button.style === "destructive").onPress();
+  assert.equal(deleted, 1, "only confirmation invokes the deletion callback");
+  assert.equal(toggled, 1, "deletion does not also toggle completion");
+}
+
 async function checkInitialLoading() {
   const initialLoading = source.match(
     /const fetchInitial = async \(\) => \{[\s\S]*?\n    \};/,
@@ -153,7 +269,7 @@ async function checkInitialLoading() {
 checkInitialLoading()
   .then(() =>
     console.log(
-      "TextInput submission, saving, FlatList, and layout animation checks pass.",
+      "TextInput, saving, FlatList, layout animation, and haptic action checks pass.",
     ),
   )
   .catch((error) => {

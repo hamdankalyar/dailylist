@@ -5,9 +5,16 @@ import { theme } from "../theme";
 type Props = {
   name: string;
   isCompleted?: boolean;
+  onDelete: () => void;
+  onToggleComplete: () => void;
 };
 
-export function ShoppingListItem({ name, isCompleted = false }: Props) {
+export function ShoppingListItem({
+  name,
+  isCompleted = false,
+  onDelete,
+  onToggleComplete,
+}: Props) {
   const handleDelete = () => {
     Alert.alert(
       "Are you sure you want to delete this?",
@@ -15,7 +22,7 @@ export function ShoppingListItem({ name, isCompleted = false }: Props) {
       [
         {
           text: "Yes",
-          onPress: () => console.log("Ok, deleting"),
+          onPress: onDelete,
           style: "destructive",
         },
         {
@@ -33,14 +40,23 @@ export function ShoppingListItem({ name, isCompleted = false }: Props) {
         isCompleted ? styles.completedContainer : undefined,
       ]}
     >
-      <Text
-        style={[
-          styles.itemText,
-          isCompleted ? styles.completedText : undefined,
-        ]}
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={onToggleComplete}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: isCompleted }}
+        accessibilityLabel={name}
+        hitSlop={12}
       >
-        {name}
-      </Text>
+        <Text
+          style={[
+            styles.itemText,
+            isCompleted ? styles.completedText : undefined,
+          ]}
+        >
+          {name}
+        </Text>
+      </TouchableOpacity>
       {isCompleted && <LibraryIcon />}
       <TouchableOpacity
         activeOpacity={0.8}
