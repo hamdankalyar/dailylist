@@ -1,8 +1,9 @@
 import { StatusBar } from "expo-status-bar";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FlatList, StyleSheet, Text, TextInput, View } from "react-native";
 import { ShoppingListItem } from "../components/ShoppingListItem";
 import { theme } from "../theme";
+import { getFromStorage, saveToStorage } from "../utils/storage";
 
 type ShoppingListItemType = {
   id: string;
@@ -10,12 +11,27 @@ type ShoppingListItemType = {
   isCompleted?: boolean;
 };
 
+const storageKey = "shopping-list";
+
 export default function App() {
   const [value, setValue] = useState("");
   const [shoppingList, setShoppingList] = useState<ShoppingListItemType[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchInitial = async () => {
+      const data = await getFromStorage(storageKey);
+      if (Array.isArray(data)) {
+        setShoppingList(data);
+      }
+      setIsLoading(false);
+    };
+
+    fetchInitial();
+  }, []);
 
   const handleSubmit = () => {
-    if (value) {
+    if (value && !isLoading) {
       const newShoppingList = [
         // ponytail: timestamp ids can collide within a millisecond; use UUIDs if needed.
         { id: new Date().toISOString(), name: value },
@@ -23,6 +39,7 @@ export default function App() {
       ];
 
       setShoppingList(newShoppingList);
+      saveToStorage(storageKey, newShoppingList);
       setValue("");
     }
   };
@@ -42,6 +59,7 @@ export default function App() {
             style={styles.textInput}
             accessibilityLabel="New shopping list item"
             placeholder="e.g Coffee"
+            editable={!isLoading}
             value={value}
             onChangeText={setValue}
             returnKeyType="done"
