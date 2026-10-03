@@ -168,23 +168,58 @@ async function check() {
   let failure;
   let permissionResult = "granted";
   const element = (type, props) => ({ type, props });
+  const countdown = load("../utils/countdown.ts", {
+    "date-fns": require("date-fns"),
+    "./storage": {},
+  });
+  let stateIndex = 0;
+  const completions = [];
   const screen = load(
     "../app/counter/index.tsx",
     {
       "react/jsx-runtime": { jsx: element, jsxs: element },
       "expo-device": device,
+      react: {
+        useState: () => [
+          [
+            { completedAtTimestamps: [] },
+            { isOverdue: false, distance: {} },
+            false,
+          ][stateIndex++],
+          () => {},
+        ],
+        useEffect: () => {},
+        useRef: () => ({ current: { start: () => {} } }),
+      },
+      "expo-haptics": {
+        NotificationFeedbackType: { Success: "success" },
+        notificationAsync: async () => {},
+      },
+      "react-native-confetti-cannon": { default: "ConfettiCannon" },
+      "../../components/TimerSegment": { TimerSegment: "TimerSegment" },
+      "../../utils/countdown": countdown,
+      "../../utils/storage": {
+        saveToStorage: async (key, state) => {
+          assert.equal(key, countdown.countdownStorageKey);
+          completions.push(state);
+        },
+      },
       "expo-notifications/build/Notifications.types": loadInstalled(
         resolve(notificationsRoot, "build/Notifications.types.js"),
       ),
       "expo-notifications/build/scheduleNotificationAsync": loadInstalled(
         resolve(notificationsRoot, "build/scheduleNotificationAsync.js"),
       ),
+      "expo-notifications/build/cancelScheduledNotificationAsync": {
+        cancelScheduledNotificationAsync: async () => {},
+      },
       "react-native": {
         View: "View",
         Text: "Text",
         TouchableOpacity: "TouchableOpacity",
         StyleSheet: { create: (styles) => styles },
         Alert: { alert: (...args) => alerts.push(args) },
+        useWindowDimensions: () => ({ width: 375 }),
       },
       "../../theme": { theme: { color: { black: "#000", white: "#fff" } } },
       "../../utils/registerForPushNotificationsAsync": {
@@ -202,7 +237,7 @@ async function check() {
   const button = screen.props.children.find(
     (child) => child.type === "TouchableOpacity",
   );
-  assert.equal(button.props.children.props.children, "Schedule notification");
+  assert.equal(button.props.children.props.children, "I've washed the car");
   assert.equal(button.props.accessibilityRole, "button");
   assert.equal(button.props.activeOpacity, 0.8);
   await button.props.onPress();
@@ -210,11 +245,11 @@ async function check() {
   assert.deepEqual(scheduledNotifications, [
     {
       identifier: "test-notification-id",
-      content: { title: "I'm a notification from your app" },
+      content: { title: "Time to wash the car" },
       trigger: {
         type: "timeInterval",
         repeats: false,
-        seconds: 5,
+        seconds: countdown.frequency / 1000,
         channelId: "default",
       },
     },
@@ -250,6 +285,11 @@ async function check() {
     errors[1][1],
     schedulingFailure,
     "the handler catches scheduling errors",
+  );
+  assert.equal(
+    completions.length,
+    5,
+    "completion is saved even when reminders are unavailable",
   );
   console.log("Notification permission and local scheduling checks pass.");
 }
